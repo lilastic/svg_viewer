@@ -1,443 +1,589 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EPICS Archiver Appliance</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EPICS Archiver Appliance</title>
 
-<link href="lib/bootstrap-3.3.7/css/bootstrap.min.css" rel="stylesheet">
-<link href="lib/bootstrap-3.3.7/css/bootstrap-datetimepicker.css" rel="stylesheet">
-<link href="lib/noty_3.1.4.css" rel="stylesheet">
+    <link href="lib/bootstrap-3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <link
+      href="lib/bootstrap-3.3.7/css/bootstrap-datetimepicker.css"
+      rel="stylesheet"
+    />
+    <link href="lib/noty_3.1.4.css" rel="stylesheet" />
 
-<script src="lib/lodash-4.17.10.min.js"></script>
-<script src="lib/plotly-2.35.2.min.js"></script>
-<script src="lib/jquery-3.1.0.min.js"></script>
-<script src="lib/bootstrap-3.3.7/js/bootstrap.min.js"></script>
-<script src="lib/bootstrap-3.3.7/js/moment.js"></script>
-<script src="lib/bootstrap-3.3.7/js/bootstrap-datetimepicker.min.js"></script>
-<script src="lib/mustache-3.0.0.min.js"></script>
-<script src="lib/noty_3.1.4.min.js"></script>
+    <script src="lib/lodash-4.17.10.min.js"></script>
+    <script src="lib/plotly-2.35.2.min.js"></script>
+    <script src="lib/jquery-3.1.0.min.js"></script>
+    <script src="lib/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script src="lib/bootstrap-3.3.7/js/moment.js"></script>
+    <script src="lib/bootstrap-3.3.7/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="lib/mustache-3.0.0.min.js"></script>
+    <script src="lib/noty_3.1.4.min.js"></script>
 
-<style type="text/css">
-#archViewer {
-	width: 100%;
-	height: 100%;
-}
+    <style type="text/css">
+      #archViewer {
+        width: 100%;
+        height: 100%;
+      }
 
-#contextMenu {
-  position: absolute;
-  display:none;
-}
+      #contextMenu {
+        position: absolute;
+        display: none;
+      }
 
-.nocheckmark {
-	display: none;
-}
+      .nocheckmark {
+        display: none;
+      }
 
-.checkmark {
-	display: inline;
-	color: olive;
-	padding-left: 0.5em;
-}
+      .checkmark {
+        display: inline;
+        color: olive;
+        padding-left: 0.5em;
+      }
 
-text.fixedBinSize tspan:nth-child(2) {
-	fill: orange;
-}
+      text.fixedBinSize tspan:nth-child(2) {
+        fill: orange;
+      }
 
-#searchAndAddPVsModal div.modal-body {
-	overflow-y: auto;
-	overflow-x: auto;
-	max-height: calc(100vh - 210px);;
-	max-width: calc(100vw - 210px);;
-}
+      #searchAndAddPVsModal div.modal-body {
+        overflow-y: auto;
+        overflow-x: auto;
+        max-height: calc(100vh - 210px);
+        max-width: calc(100vw - 210px);
+      }
 
-#pvNameSearchMatchingError {
-	color: darkred;
-}
+      #pvNameSearchMatchingError {
+        color: darkred;
+      }
 
+      #showDataModal div.modal-body {
+        overflow-y: auto;
+        overflow-x: auto;
+        max-height: calc(100vh - 210px);
+        max-width: calc(100vw - 210px);
+      }
 
-#showDataModal div.modal-body {
-	overflow-y: auto;
-	overflow-x: auto;
-	max-height: calc(100vh - 210px);;
-	max-width: calc(100vw - 210px);;
-}
+      #linkText {
+        margin-left: 1em;
+        margin-right: 1em;
+        width: calc(100% - 2em);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper" ondrop="drop(event)" ondragover="allowDrop(event)">
+      <div id="archViewer"></div>
+    </div>
 
-#linkText {
-    margin-left: 1.0em;
-    margin-right: 1.0em;
-    width: calc(100% - 2.0em);
-}
-
-</style>
-</head>
-<body>
-
-<div id="wrapper" ondrop="drop(event)" ondragover="allowDrop(event)">
-<div id="archViewer"></div>
-</div>
-
-
-<!--  Start/end time dialog  -->
-<div id="startEndTimeModal" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Please enter the start and end times</h4>
+    <!--  Start/end time dialog  -->
+    <div id="startEndTimeModal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              &times;
+            </button>
+            <h4 class="modal-title">Please enter the start and end times</h4>
+          </div>
+          <div class="container">
+            <div class="row">
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <div class="input-group date" id="startTime">
+                    <span class="input-group-addon">Start Time:</span>
+                    <input
+                      id="dialog_startTime"
+                      type="text"
+                      class="form-control"
+                    />
+                    <span class="input-group-addon">
+                      <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                  </div>
+                  <div class="input-group date" id="endTime">
+                    <span class="input-group-addon">End Time:</span>
+                    <input
+                      id="dialog_endTime"
+                      type="text"
+                      class="form-control"
+                    />
+                    <span class="input-group-addon">
+                      <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <script type="text/javascript">
+                $(function () {
+                  $("#startTime").datetimepicker({
+                    format: "YYYY/MM/DD HH:mm:ss",
+                  });
+                  $("#endTime").datetimepicker({
+                    format: "YYYY/MM/DD HH:mm:ss",
+                  });
+                  $("#startEndTimeModal").on(
+                    "hidden.bs.modal",
+                    startAndEndTimeSelected,
+                  );
+                });
+              </script>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
       </div>
-			<div class="container">
-			    <div class="row">
-			        <div class='col-sm-6'>
-			            <div class="form-group">
-			                <div class='input-group date' id='startTime'>
-			                	<span class="input-group-addon">Start Time:</span>
-			                    <input id='dialog_startTime' type='text' class="form-control"/>
-			                    <span class="input-group-addon">
-			                        <span class="glyphicon glyphicon-calendar"></span>
-			                    </span>
-			                </div>
-			                <div class='input-group date' id='endTime'>
-			                	<span class="input-group-addon">End Time:</span>
-			                    <input id='dialog_endTime' type='text' class="form-control" />
-			                    <span class="input-group-addon">
-			                        <span class="glyphicon glyphicon-calendar"></span>
-			                    </span>
-			                </div>
-			            </div>
-			        </div>
-			        <script type="text/javascript">
-			            $(function () {
-			                $('#startTime').datetimepicker({format: "YYYY/MM/DD HH:mm:ss"});
-			                $('#endTime').datetimepicker({format: "YYYY/MM/DD HH:mm:ss"});
-			                $('#startEndTimeModal').on('hidden.bs.modal', startAndEndTimeSelected);
-			            });
-			        </script>
-			    </div>
-			</div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+    <!--  Start/end time dialog  -->
+
+    <!--  Search and add PVs  -->
+    <div
+      id="searchAndAddPVsModal"
+      class="modal fade"
+      role="dialog"
+      aria-labelledby="searchAndAddPVsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button>
+            <h4 class="modal-title" id="searchAndAddPVsModalLabel">
+              Enter a PV Name GLOB pattern
+            </h4>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <form class="form-horizontal" role="form">
+              <div class="form-group">
+                <div class="input-group">
+                  <span class="input-group-addon">PV Name Pattern:</span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="pvNamePattern"
+                    placeholder="PV:Name:*"
+                  />
+                  <span class="input-group-addon">
+                    <span
+                      class="glyphicon glyphicon-search"
+                      aria-hidden="true"
+                      id="pvNameSearchIcon"
+                    ></span>
+                  </span>
+                </div>
+              </div>
+            </form>
+            <div id="pvNameSearchMatchingError"></div>
+            <ul class="list-group" id="pvNameSearchMatchingList"></ul>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              id="pvNameSearchAddBtn"
+              class="btn btn-default"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+      <script type="text/javascript">
+        $(function () {
+          $("#pvNamePattern").keydown(function (e) {
+            if (e.keyCode == 13) {
+              e.preventDefault();
+              searchForPVsMatchingPattern();
+            }
+          });
+          $("#pvNameSearchIcon").click(function () {
+            searchForPVsMatchingPattern();
+          });
+          $("#pvNameSearchAddBtn").on("click", function () {
+            addSelectedSearchPVs();
+          });
+        });
+      </script>
+    </div>
+
+    <!--  Choose bin size  -->
+    <div
+      id="binSizeModal"
+      class="modal fade"
+      role="dialog"
+      aria-labelledby="binSizeModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button>
+            <h4 class="modal-title" id="binSizeModalLabel">
+              Choose a bin size (in seconds):
+            </h4>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <form class="form-horizontal" role="form">
+              <div class="form-group">
+                <div class="input-group">
+                  <span class="input-group-addon">Bin Size(s):</span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="binSizeInput"
+                    placeholder="300"
+                  />
+                </div>
+              </div>
+            </form>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-default"
+                data-dismiss="modal"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script type="text/javascript">
+        $(function () {
+          $("#binSizeModal").on("hidden.bs.modal", fixBinSize);
+          $("#binSizeInput").keydown(function (e) {
+            if (e.keyCode == 13) {
+              e.preventDefault();
+              $("#binSizeModal").modal("hide");
+              fixBinSize();
+            }
+          });
+        });
+      </script>
+    </div>
+
+    <!--  Show data  -->
+    <div
+      id="showDataModal"
+      class="modal fade"
+      role="dialog"
+      aria-labelledby="showDataModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button>
+            <h4 class="modal-title" id="showDataModalLabel">Data for plot:</h4>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <div id="showDataTableDiv"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">
+              Done
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-<!--  Start/end time dialog  -->
 
-<!--  Search and add PVs  -->
-<div id="searchAndAddPVsModal" class="modal fade" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <!--  Info Alert Box  -->
+    <div
+      id="alertModal"
+      class="modal fade"
+      role="dialog"
+      aria-labelledby="alertInfoText"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
-                       <span aria-hidden="true">&times;</span>
-                       <span class="sr-only">Close</span>
-                </button>
-                <h4 class="modal-title" id="myModalLabel">
-                    Enter a PV Name GLOB pattern
-                </h4>
-            </div>
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button>
+          </div>
 
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <form class="form-horizontal" role="form">
-                  <div class="form-group">
-                  	<div class='input-group'>
-                	  <span class="input-group-addon">PV Name Pattern:</span>
-                      <input type="text" class="form-control" id="pvNamePattern" placeholder="PV:Name:*"/>
-                      <span class="input-group-addon">
-                      	<span class="glyphicon glyphicon-search" aria-hidden="true" id="pvNameSearchIcon"></span>
-                      </span>
-                      </div>
-                  </div>
-                </form>
-                <div id="pvNameSearchMatchingError"></div>
-                <ul class="list-group" id="pvNameSearchMatchingList">
-                </ul>
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <form class="form-horizontal" role="form">
+              <div class="form-group">
+                <div class="input-group">
+                  <span id="alertInfoText"></span>
+                </div>
+              </div>
+            </form>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-default"
+                data-dismiss="modal"
+              >
+                Done
+              </button>
             </div>
-             <div class="modal-footer">
-     			<button type="button" id="pvNameSearchAddBtn" class="btn btn-default">Add</button>
-   			</div>
+          </div>
         </div>
+      </div>
     </div>
-    <script type="text/javascript">
+
+    <!--  Modal for showing the link  -->
+    <div
+      id="linkModal"
+      class="modal fade"
+      role="dialog"
+      aria-label="Link to the current view"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <form class="form-horizontal" role="form">
+              <div class="form-group">
+                <textarea
+                  rows="10"
+                  class="form-control"
+                  id="linkText"
+                ></textarea>
+              </div>
+            </form>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-default"
+                data-dismiss="modal"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--  Comment for elog  -->
+    <div
+      id="elogModal"
+      class="modal fade"
+      role="dialog"
+      aria-labelledby="elogModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button>
+            <h4 class="modal-title" id="elogModalLabel">Post to the elog:</h4>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <form class="form-horizontal" role="form">
+              <div class="form-group">
+                <textarea
+                  rows="5"
+                  class="form-control"
+                  id="elogComment"
+                  placeholder="Please add a comment for the eLog"
+                ></textarea>
+              </div>
+            </form>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-default"
+                data-dismiss="modal"
+                id="elogPost"
+              >
+                Post
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script type="text/javascript">
         $(function () {
-            $("#pvNamePattern").keydown(function(e) {
-                if (e.keyCode == 13) {
-                    e.preventDefault();
-                    searchForPVsMatchingPattern();
-                }
-            });
-            $("#pvNameSearchIcon").click(function() {
-            	searchForPVsMatchingPattern();
-            });
-            $("#pvNameSearchAddBtn").on("click", function(){
-                addSelectedSearchPVs();
-            })
+          $("#elogPost").on("click", postToELog);
         });
-    </script>
-</div>
-
-<!--  Choose bin size  -->
-<div id="binSizeModal" class="modal fade" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
-                       <span aria-hidden="true">&times;</span>
-                       <span class="sr-only">Close</span>
-                </button>
-                <h4 class="modal-title" id="myModalLabel">
-                    Choose a bin size (in seconds):
-                </h4>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <form class="form-horizontal" role="form">
-                  <div class="form-group">
-                  	<div class='input-group'>
-                	  <span class="input-group-addon">Bin Size(s):</span>
-                      <input type="text" class="form-control" id="binSizeInput" placeholder="300"/>
-                      </div>
-                  </div>
-                </form>
-                <div class="modal-footer">
-        			<button type="button" class="btn btn-default" data-dismiss="modal">Done</button>
-      			</div>
-            </div>
-        </div>
+      </script>
     </div>
-    <script type="text/javascript">
+
+    <!--  Ranges for the Y-Axes  -->
+    <div
+      id="yAxesModal"
+      class="modal fade"
+      role="dialog"
+      aria-labelledby="yAxesModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button>
+            <h4 class="modal-title" id="yAxesModalLabel">
+              Specify ranges for the Y Axes based on EGU's:
+            </h4>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <form class="form-horizontal" role="form">
+              <table class="table table-striped table-bordered">
+                <thead>
+                  <tr>
+                    <th>EGU</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </form>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-default"
+                data-dismiss="modal"
+                id="yAxesPost"
+              >
+                Set Ranges
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script type="text/javascript">
         $(function () {
-            $('#binSizeModal').on('hidden.bs.modal', fixBinSize);
-            $("#binSizeInput").keydown(function(e) {
-                if (e.keyCode == 13) {
-                    e.preventDefault();
-                    $("#binSizeModal").modal("hide");
-                    fixBinSize();
-                }
-            });
+          $("#yAxesPost").on("click", applyYAxesRanges);
         });
-    </script>
-</div>
-
-<!--  Show data  -->
-<div id="showDataModal" class="modal fade" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
-                       <span aria-hidden="true">&times;</span>
-                       <span class="sr-only">Close</span>
-                </button>
-                <h4 class="modal-title" id="myModalLabel">
-                    Data for plot:
-                </h4>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="modal-body">
-              	<div id="showDataTableDiv"></div>
-            </div>
-             <div class="modal-footer">
-     			<button type="button" class="btn btn-default" data-dismiss="modal">Done</button>
-   			</div>
-        </div>
+      </script>
     </div>
-</div>
 
-
-
-<!--  Info Alert Box  -->
-<div id="alertModal" class="modal fade" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <!--  remove PVs  -->
+    <div
+      id="removePVsModal"
+      class="modal fade"
+      role="dialog"
+      aria-labelledby="removePVsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
-                       <span aria-hidden="true">&times;</span>
-                       <span class="sr-only">Close</span>
-                </button>
-            </div>
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button>
+            <h4 class="modal-title" id="removePVsModalLabel">
+              Remove selected PVs
+            </h4>
+          </div>
 
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <form class="form-horizontal" role="form">
-                  <div class="form-group">
-                  	<div class='input-group'>
-                  	<span id="alertInfoText"></span>
-                      </div>
-                  </div>
-                </form>
-                <div class="modal-footer">
-        			<button type="button" class="btn btn-default" data-dismiss="modal">Done</button>
-      			</div>
-            </div>
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <form class="form-horizontal" role="form">
+              <div class="checkboxlist"></div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-default"
+              data-dismiss="modal"
+              id="removePVsBtn"
+            >
+              Remove
+            </button>
+          </div>
         </div>
-    </div>
-</div>
-
-<!--  Modal for showing the link  -->
-<div id="linkModal" class="modal fade" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
-                       <span aria-hidden="true">&times;</span>
-                       <span class="sr-only">Close</span>
-                </button>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <form class="form-horizontal" role="form">
-                  <div class="form-group"><textarea rows="10" class="form-control" id="linkText" ></textarea></div>
-                </form>
-                <div class="modal-footer">
-        			<button type="button" class="btn btn-default" data-dismiss="modal">Done</button>
-      			</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<!--  Comment for elog  -->
-<div id="elogModal" class="modal fade" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
-                       <span aria-hidden="true">&times;</span>
-                       <span class="sr-only">Close</span>
-                </button>
-                <h4 class="modal-title" id="myModalLabel">
-                    Post to the elog:
-                </h4>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <form class="form-horizontal" role="form">
-                  <div class="form-group"><textarea rows="5" class="form-control" id="elogComment" placeholder="Please add a comment for the eLog" ></textarea></div>
-                </form>
-                <div class="modal-footer">
-        			<button type="button" class="btn btn-default" data-dismiss="modal" id="elogPost">Post</button>
-      			</div>
-            </div>
-        </div>
-    </div>
-    <script type="text/javascript">
+      </div>
+      <script type="text/javascript">
         $(function () {
-            $('#elogPost').on('click', postToELog);
+          $("#removePVsBtn").on("click", removeSelectedPVs);
         });
-    </script>
-</div>
-
-<!--  Ranges for the Y-Axes  -->
-<div id="yAxesModal" class="modal fade" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
-                       <span aria-hidden="true">&times;</span>
-                       <span class="sr-only">Close</span>
-                </button>
-                <h4 class="modal-title" id="myModalLabel">
-                    Specify ranges for the Y Axes based on EGU's:
-                </h4>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <form class="form-horizontal" role="form">
-                    <table class="table table-striped table-bordered">
-                        <thead><tr><th>EGU</th><th>Min</th><th>Max</th></tr></thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
-                </form>
-                <div class="modal-footer">
-        			<button type="button" class="btn btn-default" data-dismiss="modal" id="yAxesPost">Set Ranges</button>
-      			</div>
-            </div>
-        </div>
+      </script>
     </div>
-    <script type="text/javascript">
-        $(function () {
-            $('#yAxesPost').on('click', applyYAxesRanges);
-        });
-    </script>
-</div>
 
-<!--  remove PVs  -->
-<div id="removePVsModal" class="modal fade" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <!--Test advanced view-->
+    <div
+      id="advancedViewModal"
+      class="modal fade"
+      role="dialog"
+      aria-labelledby="advancedViewModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
-                       <span aria-hidden="true">&times;</span>
-                       <span class="sr-only">Close</span>
-                </button>
-                <h4 class="modal-title" id="myModalLabel">
-                    Remove selected PVs
-                </h4>
-            </div>
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button>
+            <h4 class="modal-title" id="advancedViewModalLabel">
+              Select live interval
+            </h4>
+          </div>
 
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <form class="form-horizontal" role="form">
-                    <div class="checkboxlist">
-                    </div>
-                </form>
-            </div>
-             <div class="modal-footer">
-     			<button type="button" class="btn btn-default" data-dismiss="modal" id="removePVsBtn">Remove</button>
-   			</div>
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <form class="form-group">
+              <div class="input-field"></div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-default"
+              data-dismiss="modal"
+              id="showViewBtn"
+            >
+              OK
+            </button>
+          </div>
         </div>
-    </div>
-    <script type="text/javascript">
+      </div>
+      <script type="text/javascript">
         $(function () {
-            $('#removePVsBtn').on('click', removeSelectedPVs);
+          $("#showViewBtn").on("click", showAdvancedView);
         });
-    </script>
-</div>
-
-<!--Test advanced view-->
-<div id="advancedViewModal" class="modal fade" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
-                       <span aria-hidden="true">&times;</span>
-                       <span class="sr-only">Close</span>
-                </button>
-                <h4 class="modal-title" id="myModalLabel">
-                    Select live interval
-                </h4>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <form class="form-group">
-                    <div class="input-field">
-                    </div>
-                </form>
-            </div>
-             <div class="modal-footer">
-     			<button type="button" class="btn btn-default" data-dismiss="modal" id="showViewBtn">OK</button>
-   			</div>
-        </div>
+      </script>
     </div>
-    <script type="text/javascript">
-        $(function () {
-            $('#showViewBtn').on('click', showAdvancedView);
-        });
-    </script>
-</div>
-<!--End test-->
+    <!--End test-->
 
-<script type="text/javascript" src="archViewer.js"></script>
-
-</body>
+    <script type="text/javascript" src="archViewer.js"></script>
+  </body>
 </html>

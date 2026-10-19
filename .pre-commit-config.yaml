@@ -1,0 +1,25 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^lib/
+      - id: end-of-file-fixer
+        exclude: ^lib/
+      - id: check-yaml
+      - id: check-json
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        exclude: ^lib/
+
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: e3eebf65325ccc992422292cb7a4baee967cf815 # v1.26.1
+    hooks:
+      - id: zizmor
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: ffb6a759a979008c0e6dff86e39f4745a2d9eac4 # v3.1.0
+    hooks:
+      - id: prettier
+        types_or: [html, css, javascript]
+        exclude: ^lib/
