@@ -1,0 +1,22 @@
+
+FROM python:3.12-slim
+
+
+WORKDIR /app
+
+COPY lib/ ./lib/
+
+COPY archViewer.html .
+
+COPY archViewer.js .
+
+COPY viewerProxy.py .
+
+
+ENV LISTENING_PORT=8080
+
+ENV HOST_NAME=http://remote-archiver-appliance.ess.eu:17668/retrieval/
+
+
+CMD ["python3", "viewerProxy.py", "$LISTENING_PORT", "$HOST_NAME"]
+

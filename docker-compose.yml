@@ -1,0 +1,9 @@
+services:
+  svg-viewer:
+    build: .
+    ports:
+      - "${LISTENING_PORT:-8080}:${LISTENING_PORT:-8080}"
+    environment:
+      LISTENING_PORT: "${LISTENING_PORT:-8080}"
+      HOST_NAME: "${HOST_NAME:-http://remote-archiver-appliance.ess.eu:17668/retrieval/}"
+    restart: unless-stopped
