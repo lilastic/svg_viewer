@@ -24,4 +24,3 @@ To start NGINX with this configuration, open a terminal and execute:
 ```
 nginx -c nginx.conf
 ```
-
