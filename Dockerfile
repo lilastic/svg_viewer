@@ -23,4 +23,4 @@ ENV LISTENING_PORT=8080
 ENV HOST_NAME=http://archiver-appliance:17668/retrieval/
 
 
-CMD ["python3", "viewerProxy.py", "$LISTENING_PORT", "$HOST_NAME"]
+CMD ["sh", "-c", "exec python3 viewerProxy.py \"$LISTENING_PORT\" \"$HOST_NAME\""]
