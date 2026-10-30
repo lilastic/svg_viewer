@@ -65,6 +65,11 @@
         max-width: calc(100vw - 210px);
       }
 
+      label.input-group-addon {
+        font-weight: normal;
+        margin-bottom: 0;
+      }
+
       #linkText {
         margin-left: 1em;
         margin-right: 1em;
@@ -92,7 +97,9 @@
               <div class="col-sm-6">
                 <div class="form-group">
                   <div class="input-group date" id="startTime">
-                    <span class="input-group-addon">Start Time:</span>
+                    <label class="input-group-addon" for="dialog_startTime"
+                      >Start Time:</label
+                    >
                     <input
                       id="dialog_startTime"
                       type="text"
@@ -103,7 +110,9 @@
                     </span>
                   </div>
                   <div class="input-group date" id="endTime">
-                    <span class="input-group-addon">End Time:</span>
+                    <label class="input-group-addon" for="dialog_endTime"
+                      >End Time:</label
+                    >
                     <input
                       id="dialog_endTime"
                       type="text"
@@ -166,7 +175,9 @@
             <form class="form-horizontal" role="form">
               <div class="form-group">
                 <div class="input-group">
-                  <span class="input-group-addon">PV Name Pattern:</span>
+                  <label class="input-group-addon" for="pvNamePattern"
+                    >PV Name Pattern:</label
+                  >
                   <input
                     type="text"
                     class="form-control"
@@ -240,7 +251,9 @@
             <form class="form-horizontal" role="form">
               <div class="form-group">
                 <div class="input-group">
-                  <span class="input-group-addon">Bin Size(s):</span>
+                  <label class="input-group-addon" for="binSizeInput"
+                    >Bin Size(s):</label
+                  >
                   <input
                     type="text"
                     class="form-control"
@@ -368,6 +381,9 @@
           <div class="modal-body">
             <form class="form-horizontal" role="form">
               <div class="form-group">
+                <label class="sr-only" for="linkText"
+                  >Link to the current view</label
+                >
                 <textarea
                   rows="10"
                   class="form-control"
@@ -411,6 +427,7 @@
           <div class="modal-body">
             <form class="form-horizontal" role="form">
               <div class="form-group">
+                <label class="sr-only" for="elogComment">eLog comment</label>
                 <textarea
                   rows="5"
                   class="form-control"

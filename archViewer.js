@@ -117,8 +117,8 @@ viewerVars.relativeDateRegex = /^([-+]{0,1})(\d+)([smhdwMQy]{1})$/; // Get these
 function parseRelativeDate(relDate) {
   var parts = viewerVars.relativeDateRegex.exec(relDate);
   return parts[1] != "-"
-    ? moment().add(parseInt(parts[2]), parts[3]).toDate()
-    : moment().subtract(parseInt(parts[2]), parts[3]).toDate();
+    ? moment().add(Number.parseInt(parts[2], 10), parts[3]).toDate()
+    : moment().subtract(Number.parseInt(parts[2], 10), parts[3]).toDate();
 }
 
 // You can pass in parameters to the viewer.
@@ -128,14 +128,14 @@ function parseRelativeDate(relDate) {
 
 // parse parameters into the viweerVars object
 function parseURLParameters() {
-  queryString = window.location.search;
+  let queryString = window.location.search;
   if (
     typeof queryString !== "undefined" &&
     queryString &&
     queryString.length > 2
   ) {
-    queries = queryString.substring(1).split("&");
-    for (i = 0, l = queries.length; i < l; i++) {
+    let queries = queryString.substring(1).split("&");
+    for (let i = 0, l = queries.length; i < l; i++) {
       let parts = queries[i].split("="),
         name = parts[0],
         val = decodeURIComponent(parts[1]);
@@ -159,7 +159,7 @@ function parseURLParameters() {
           viewerVars.egu_yaxis_specs = $.parseJSON(decodeURIComponent(val));
           break;
         case "binSize":
-          viewerVars.binSize = parseInt(val);
+          viewerVars.binSize = Number.parseInt(val, 10);
           viewerVars.userFixedBinSize = true;
         case "replaceNA":
           viewerVars.replaceNA = val === "true" ? true : false;
@@ -180,7 +180,7 @@ function parseURLParameters() {
 function computeTraceIndices() {
   var traces = [];
   for (var i = 0; i < viewerVars.pvs.length; i++) {
-    pvName = viewerVars.pvs[i];
+    let pvName = viewerVars.pvs[i];
     if ("trace" in viewerVars.pvData[pvName]) {
       var currTraceIndex = traces.length;
       traces.push(viewerVars.pvData[pvName].trace);
@@ -287,7 +287,7 @@ function determineBinSize() {
     43200, 86400,
   ];
   for (i in potentialBinSizes) {
-    potentialBinSize = potentialBinSizes[i];
+    let potentialBinSize = potentialBinSizes[i];
     if (duration / potentialBinSize <= 2 * points) {
       viewerVars.binSize = potentialBinSize;
       // console.log("Setting potential bin size to " + viewerVars.binSize + " for windowsize " + points + " and duration " + duration);
@@ -1111,7 +1111,7 @@ function startAndEndTimeSelected() {
 
   if (viewerVars.plotType == viewerVars.plotTypeEnum.SCATTER_2D) {
     let currXAxis = myDiv.layout.xaxis;
-    layoutChanges = { xaxis: { autorange: false } };
+    let layoutChanges = { xaxis: { autorange: false } };
     layoutChanges.xaxis.rangeselector = viewerVars.selectorOptions;
     layoutChanges.xaxis.range = [
       viewerVars.start.getTime(),
@@ -1121,7 +1121,7 @@ function startAndEndTimeSelected() {
     Plotly.relayout(myDiv, layoutChanges);
   } else {
     let currXAxis = myDiv.layout.xaxis2;
-    layoutChanges = { xaxis2: { autorange: false } };
+    let layoutChanges = { xaxis2: { autorange: false } };
     layoutChanges.xaxis2.rangeselector = viewerVars.selectorOptions;
     layoutChanges.xaxis2.range = [
       viewerVars.start.getTime(),
@@ -1182,7 +1182,7 @@ function addSelectedSearchPVs(e) {
 }
 
 function fixBinSize() {
-  let binSize = parseInt($("#binSizeInput").val());
+  let binSize = Number.parseInt($("#binSizeInput").val(), 10);
   if (binSize > 0) {
     viewerVars.userFixedBinSize = true;
     viewerVars.binSize = binSize;
@@ -1417,7 +1417,7 @@ function showElogModal(gd) {
       rawLength = raw.length,
       uInt8Array = new Uint8Array(rawLength);
     for (let i = 0; i < rawLength; ++i) {
-      uInt8Array[i] = raw.charCodeAt(i);
+      uInt8Array[i] = raw.codePointAt(i);
     }
     return new Blob([uInt8Array], { type: contentType });
   }
@@ -1502,13 +1502,13 @@ function applyYAxesRanges() {
   let newlayout = myDiv.layout;
   _.each(viewerVars.egu2axis, function (v, k) {
     let range = [
-      parseFloat(
+      Number.parseFloat(
         $("#yAxesModal")
           .find("table tbody")
           .find("input[name=" + k + "_min]")
           .val(),
       ),
-      parseFloat(
+      Number.parseFloat(
         $("#yAxesModal")
           .find("table tbody")
           .find("input[name=" + k + "_max]")
@@ -1603,7 +1603,7 @@ function showAdvancedViewModal() {
 
 function showAdvancedView() {
   let step = document.getElementById("unitInput").value;
-  let count = parseInt(document.getElementById("timeInput").value);
+  let count = Number.parseInt(document.getElementById("timeInput").value, 10);
   updateLiveButton(step, count);
 }
 
